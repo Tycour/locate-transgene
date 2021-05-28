@@ -1,6 +1,11 @@
 #! /usr/bin/env nextflow
 
-params.outdir = "NanoPlot"
-params.reads = "reads.fasta"
+println "\nI will NanoPlot $params.reads and store results in $params.outdir using $params.threads CPU threads."
 
-println "I will NanoPlot $params.reads and store results in $params.outdir"
+process runNanoPlot {
+
+    script:
+    """
+    NanoPlot --fastq $params.reads -o $params.outdir -t $params.threads
+    """
+}
