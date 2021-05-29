@@ -20,4 +20,26 @@ process runNanoPlot {
     """
 }
 
+println "\n3. Appending transgene sequence to reference genome file.\n"
+
+process appendSequence2Genome {
+
+    script:
+    """
+    cat ${params.workdir}/${params.transgene} >> ${params.workdir}/${params.genome}
+    """
+}
+
+println "\n4. Aligning reads to reference genome.\n"
+
+process mapReads2Genome {
+
+    script:
+    """
+    minimap2 -a -o ${params.workdir}/${params.sampleID}.sam ${params.workdir}/${params.genome} ${params.workdir}/${params.sampleID}.fastq.gz
+    """
+}
+
+println "\nTODO - Guide user through IGV process."
+
 println "\nDone"
