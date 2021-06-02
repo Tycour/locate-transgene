@@ -1,45 +1,44 @@
 #! /usr/bin/env nextflow
 
-println "\n1. Preparing files for analysis.\n"
+sampleID = params.sampleID
+readsDir = params.readsDir
+transgene = file(params.transgene)
+genome = file(params.genome)
+threads = params.threads
 
-process combineFastQ {
+log.info """\n
+L O C A T E   T R A N S G E N E  -  N F    v 0.1
+================================
+sampleID : $sampleID
+readsDir : $readsDir
+genome   : $genome
+transgene: $transgene
+threads  : $threads
+\n
+"""
 
-    script:
+process prepareReads {
+
+    output:
+    file "allReads.fq.gz" into reads_ch
+
     """
-    cat ${params.workdir}/*.fastq.gz > ${params.workdir}/${params.sampleID}.fastq.gz
-    """
-}
-
-println "\n2. Generating sequencing statistics.\n"
-
-process runNanoPlot {
-
-    script:
-    """
-    NanoPlot --fastq ${params.workdir}/${params.sampleID}.fastq.gz -o ${params.workdir}/NanoPlot -t $params.threads
-    """
-}
-
-println "\n3. Appending transgene sequence to reference genome file.\n"
-
-process appendSequence2Genome {
-
-    script:
-    """
-    cat ${params.workdir}/${params.transgene} >> ${params.workdir}/${params.genome}
+    cat $readsDir/*.fastq.gz > allReads.fq.gz
+    NanoPlot --fastq allReads.fq.gz -o $readsDir/NanoPlot -t $threads
     """
 }
 
-println "\n4. Aligning reads to reference genome.\n"
+process alignSequences {
 
-process mapReads2Genome {
+    input:
+    file allReads from reads_ch
 
-    script:
     """
-    minimap2 -a -o ${params.workdir}/${params.sampleID}.sam ${params.workdir}/${params.genome} ${params.workdir}/${params.sampleID}.fastq.gz
+    mkdir $readsDir/Alignment
+    cat $transgene $genome >> $readsDir/Alignment/AgamP4_${sampleID}.fa
+    minimap2 -t $threads -a -o alignment.sam $readsDir/Alignment/AgamP4_${sampleID}.fa $allReads
+    samtools sort alignment.sam > $readsDir/Alignment/${sampleID}.sorted.bam
+    samtools index $readsDir/Alignment/${sampleID}.sorted.bam $readsDir/Alignment/${sampleID}.sorted.bai -@ $threads
     """
+
 }
-
-println "\nTODO - Guide user through IGV process."
-
-println "\nDone"
