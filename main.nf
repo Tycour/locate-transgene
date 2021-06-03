@@ -1,5 +1,13 @@
 #! /usr/bin/env nextflow
 
+/*
+ * 'Locate Transgene-NF' - A Nextflow pipeline for locating randomly inserted transgenes with Nanopore data
+ */
+
+/*
+ * Define the default parameters
+ */
+
 sampleID = params.sampleID
 readsDir = params.readsDir
 transgene = file(params.transgene)
@@ -7,7 +15,7 @@ genome = file(params.genome)
 threads = params.threads
 
 log.info """\n
-L O C A T E   T R A N S G E N E  -  N F    v 0.1
+L O C A T E   T R A N S G E N E  -  N F    v 1.0
 ================================
 sampleID : $sampleID
 readsDir : $readsDir
@@ -16,6 +24,10 @@ transgene: $transgene
 threads  : $threads
 \n
 """
+
+/*
+ * Step 1. Combine fastq files and create sequencing statistics with NanoPlot
+ */
 
 process combineReads {
     conda 'NanoPlot'
@@ -28,6 +40,10 @@ process combineReads {
     NanoPlot --fastq allReads.fastq.gz -o $readsDir/nanoplot -t $threads
     """
 }
+
+/*
+ * Step 2. Filter reads according to length and quality score
+ */
 
 process filterReads {
     conda 'filtlong'
@@ -43,6 +59,11 @@ process filterReads {
     """
 }
 
+/*
+ * Step 3. Align Nanopore reads to modified reference genome (with added transgene contig)
+ * Step 4. Sort and index for viewing in preferred Genome Browser (e.g. Integrated Genome Viewer)
+ */
+
 process alignSequences {
     conda 'minimap2 samtools'
 
@@ -50,7 +71,7 @@ process alignSequences {
     stdin from filtReads_ch
 
     """
-    mkdir $readsDir/Alignment
+    mkdir -p $readsDir/Alignment
     cat $transgene $genome >> $readsDir/Alignment/AgamP4_${sampleID}.fa
     minimap2 -t $threads -a -o alignment.sam $readsDir/Alignment/AgamP4_${sampleID}.fa -
     samtools sort alignment.sam > $readsDir/Alignment/${sampleID}.sorted.bam
