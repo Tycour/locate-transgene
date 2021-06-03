@@ -1,0 +1,11 @@
+name: locate
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - filtlong=0.2.0=h87af4ef_4
+  - minimap2=2.20=h188c3c3_0
+  - nanoplot=1.36.2=pyhdfd78af_1
+  - nextflow=21.04.0=h4a94de4_0
+  - samtools=1.9=h8aa4d43_12

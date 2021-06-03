@@ -18,6 +18,7 @@ threads  : $threads
 """
 
 process combineReads {
+    conda 'NanoPlot'
 
     output:
     file "allReads.fastq.gz" into allReads_ch
@@ -29,6 +30,7 @@ process combineReads {
 }
 
 process filterReads {
+    conda 'filtlong'
 
     input:
     file allReads from allReads_ch
@@ -42,6 +44,7 @@ process filterReads {
 }
 
 process alignSequences {
+    conda 'minimap2 samtools'
 
     input:
     stdin from filtReads_ch
